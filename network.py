@@ -2,17 +2,17 @@
 import time
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+# %matplotlib qt
 import numpy as np
 import pandas as pd
 from scipy import sparse
+# from collections import Counter
 
 #################### TO DO ##########################################
 
 # scale free or non scale free? then choose another from https://snap.stanford.edu/data/index.html
 # see log graph
-
-# degree for all neighbours
-
+# -> okay now what?
 
 # bonus: estimation of fit to poisson (random graph) and power law (scale free graph)
 
@@ -120,19 +120,17 @@ class Network:
         self.A_sparse = A_sparse
         self.A_size = A_size
         self.DegreeList = DegreeList
-        
-        
 
-    def visualise(self):
+    # def visualise(self):
         # thought that would be nice to have for the project documentation in the end..
         # maybe now it will work with the sparse matrix
 
-        fig = plt.figure()
-        ax = fig.add_subplot(121)
-        ax.imshow(self.A, interpolation='bilinear', cmap=cm.Greys_r)
-        plt.show()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(121)
+        # ax.imshow(self.A, interpolation='bilinear', cmap=cm.Greys_r)
+        # plt.show()
 
-        plt.spy(self.A, precision=0)
+        # plt.spy(self.A, precision=0)
 
 
 
@@ -165,11 +163,36 @@ class Network:
 
     # iv) degree distribution ===============================================================================================
 
-    def PlotDegreeDistribution(self):
-        # degree distribution as a histogram
-        bins = np.linspace(0, 70, 70)
-        plt.hist(x=self.DegreeList, bins=bins)
-        plt.show()
+    def plotDegDis(self, style):
+        # DegreeDistribution dd
+        # count how many nodes have 1, 2, 3 .. n degrees
+        dd = [[degree, self.DegreeList.tolist().count(degree)] for degree in set(self.DegreeList)] # DegreeList is actually numpy.ndarray
+        # split into two variables for plotting
+        x = [dd[i][0] for i in range(len(dd))]
+        y = [dd[i][1] for i in range(len(dd))]
+
+
+
+        if style == 'linear':
+            # plt.subplot(3, 1, 1)        # divides into 2 rows & 1 column, uses location 1 (ie top row)
+            plt.bar(x[:49], y[:49])
+            plt.title('Linear relationship')
+            # plt.legend(loc = 'best')
+            plt.xlabel('degrees (<=50)')
+            plt.ylabel('number of nodes')
+            plt.grid()                  # show grid
+            plt.savefig('lin_plot.png', dpi = 200, transparent = True)
+            plt.show()
+
+        elif style == 'loglog':
+            # plt.subplot(3,1,3)
+            plt.plot(np.log(x), np.log(y), 'ko')
+            plt.title('Log-log relationship')
+            # plt.legend(loc = 'best')
+            plt.xlabel('log(degrees)')
+            plt.ylabel('log(number of nodes)')
+            plt.savefig('loglog_plot.png', dpi = 200, transparent = True)
+            plt.show()
 
 
 
@@ -178,24 +201,20 @@ class Network:
     # v) average neighbour degree ===============================================================================================
 
     def AverageNeighbourDegree(self):
-        index = np.random.randint(0, self.A_size)
-        collist = []
-        col = 0
+        randNode = np.random.randint(0, self.A_size)
 
-        for i in self.A[index, :]:
-            if i != 0:
-                collist.append(col)
-            col = col + 1
+        neighbours = np.where(self.A[randNode, :] == 1)[0]                    # returns tuple
 
-        print("Vertex %d has %d neighbours, which are located at at" %
-              (index, self.DegreeList[index]))
-        print(collist)
+        # what about a list comprehension?
+        # dont think its possible without using different data format, eg pandas Series or DataFrame
 
-        AverageDegree = 0
-        for i in collist:
-            AverageDegree = AverageDegree + self.DegreeList[i]
-        AverageDegree = AverageDegree/len(collist)
-        print("The average degree found is %lf" % (AverageDegree))
+
+        print("Node %d has %d neighbours (double-check: %d), which are located at %s." % (randNode, len(neighbours), self.DegreeList[randNode], neighbours))
+
+        print("\nThose neighbours themself have on average %s neighbours." % round(np.add.reduce([self.DegreeList[i] for i in neighbours])/len(neighbours), 2))
+
+        print("\nThe average number of degrees in the entire network is %s." % round(np.add.reduce(self.DegreeList)/len(self.DegreeList), 3))
+
 
 
 
@@ -209,16 +228,12 @@ N1 = n1.buildFromData()
 
 
 
-
-
-
 #%% run afterwards by importing ===============================================================================================
 n1 = NetworkBuilder("enron")
 N1 = n1.buildByImport()
 
 # N1.visualise()
 
-N1.PlotDegreeDistribution()
 
 
 
@@ -233,8 +248,8 @@ pass
 
 
 #%% iv) probability mass function ===============================================================================================
-N1.PlotDegreeDistribution()
-
+N1.plotDegDis('linear')
+N1.plotDegDis('loglog')
 
 
 
@@ -243,5 +258,6 @@ N1.PlotDegreeDistribution()
 
 #%% v) avg degree of neighbours ===============================================================================================
 N1.AverageNeighbourDegree()
+
 
 
