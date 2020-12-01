@@ -11,10 +11,13 @@ from scipy import sparse
 
 # scale free or non scale free? then choose another from https://snap.stanford.edu/data/index.html
 
-# clustering coefficient:
-	# fast matrix multiplication algorithm
-	# which equation/approach?
+# fast matrix multiplication algorithm
 
+# degree of the networks
+
+# Plot probability mass function
+
+# Calculate average degree of randomly chosen vertex;
 
 # Bonus is all theoretical;
 
@@ -30,11 +33,21 @@ from scipy import sparse
 
 class Network:
 
+    # constructor merely constructs objects and initiates properties
     def __init__(self, data_file):
+        
         self.data_file = data_file
+        # self.A = np.ones((10000, 10000), dtype = int)
+        self.A_size = None
+        self.A_sparse = None #  sparse.coo_matrix(self.A)
+        self.DegreeList = []
 
+
+
+    # now we actually fill in the properties of the object
+    def createNetwork(self):
         # open file
-        with open(data_file + ".txt", "r") as self.data:
+        with open(self.data_file + ".txt", "r") as self.data:
             for i in range(4):
                 self.data.readline()	  # skip meta info
             adjacency_list = self.data.readlines()
@@ -55,6 +68,7 @@ class Network:
         self.A_size = max(rowind)+1
         self.A = np.zeros((self.A_size, self.A_size), dtype=int)
 
+
         for i in range(length):
             rowindex = rowind[i]
             columnindex = colind[i]
@@ -62,32 +76,52 @@ class Network:
             # setting non-zero items in full matrix
             self.A[rowindex][columnindex] = 1
 
+
         print("-- full matrix created")
         print("matrix size: " + str(self.A_size) + "^2")
         print(str(self.A[:6, :6]) + "\n")
 
-        # create and fill sparse matrix
+
+        # create sparse matrix
         sparsevaluelist = [1] * (length * 1)  # vector of ones
 
         self.A_sparse = sparse.coo_matrix((sparsevaluelist, (rowind, colind)))
         print("-- sparse matrix created!")
-        # print(self.A_sparse.toarray()) #[:6, :6]
+        print(self.A_sparse.toarray()[:6, :6])
 
+        self.createDegreeList()
+        print("-- degree list created: \n" + str(self.DegreeList))
+
+
+
+
+    def createDegreeList(self):
+        # by summing the total amount of neighbours each vertex has
+        self.DegreeList = np.add.reduce(self.A)
+        
         
 
     def exportA_sparse(self):
-        sparse.save_npz(str(self.data_file) + "A_sparse.npz", self.A_sparse)
+        sparse.save_npz(str(self.data_file) + "-A_sparse.npz", self.A_sparse)
         print("-- exported as npz")
 
+
     def importA_sparse(self):
-        self.A_sparse = sparse.load_npz(self.data_file + "A_sparse.npz")
-				self.A = self.A_sparse.toarray()
+        self.A_sparse = sparse.load_npz(self.data_file + "-A_sparse.npz")
+        print("-- A_sparse imported from npz")
+        self.A = self.A_sparse.toarray()
+        print("-- A created from A_sparse")
+        self.A_size = len(self.A)
+        print("-- A_size calculated")
+        self.createDegreeList()
+        print("-- DegreeList calculated")
 
 
-    
+
+
     def visualisation(self):
         # thought that would be nice to have for the project documentation in the end..
-            # maybe now it will work with the sparse matrix
+        # maybe now it will work with the sparse matrix
 
         fig = plt.figure()
         ax = fig.add_subplot(121)
@@ -95,6 +129,8 @@ class Network:
         plt.show()
 
         plt.spy(self.A, precision=0)
+
+
 
 # iii) average clustering coefficient ===============================================================================================
 
@@ -121,17 +157,18 @@ class Network:
 
         return diagonal
 
+
+
 # iv) degree distribution ===============================================================================================
 
     def PlotDegreeDistribution(self):
-        # Sums the total amount of neighbours each vertex has and saves that value in DegreeList
-        self.DegreeList = np.add.reduce(self.A)
-        print("-- degree list: " + str(self.DegreeList))
-
         # degree distribution as a histogram
         bins = np.linspace(0, 70, 70)
         plt.hist(x=self.DegreeList, bins=bins)
         plt.show()
+
+
+
 
 
 # v) average neighbour degree ===============================================================================================
@@ -157,14 +194,21 @@ class Network:
         print("The average degree found is %lf" % (AverageDegree))
 
 
+
+
+
 # %% create once ===============================================================================================
 N1 = Network("enron")
 N1.exportA_sparse()
 
+
+
 # %% import and use ===============================================================================================
 # N1 = Network("enron")
-N1.importA_sparse()                         # problem: re-creates the network object and its properties from scratch, not from the imported data
+N1.importA_sparse()
 
 
 N1.PlotDegreeDistribution()
 N1.AverageNeighbourDegree()
+
+# %%
