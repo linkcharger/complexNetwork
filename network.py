@@ -247,13 +247,20 @@ class Network:
 
         a, b = params_power
         
-        f1 = plt.plot(x, Poisson(x, lamb))
+        plt.figure(0)
         axes = plt.axes()
         axes.set_xlim([0,50])
-        f1.show()
+        plt.plot(x, Poisson(x, lamb))
 
-        f2 = plt.plot(x, Powerlaw(x, a, b))
-        f2.show()
+        print("We have lambda = %.5lf" %lamb)
+
+        plt.figure(1)
+        axes = plt.axes()
+        axes.set_xlim([0,50])
+        plt.plot(x, Powerlaw(x, a, b))
+
+        print("We have a = %.5lf and b = %.5lf" % (a, b))
+        
         
 
 
