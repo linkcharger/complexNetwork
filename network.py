@@ -8,8 +8,10 @@ import pandas as pd
 from scipy import sparse
 from scipy.optimize import curve_fit
 from scipy.stats import poisson
+from scipy.stats import chisquare
 from math import factorial
-# from collections import Counter
+from math import exp
+#from collections import Counter
 
 #################### TO DO ##########################################
 
@@ -223,6 +225,8 @@ class Network:
 
     def Fitting(self):
 
+        #Maybe we should combine this with the plotdegdis function, since we actually need everything that's in there for this function
+
         dd = [[degree, self.DegreeList.tolist().count(degree)] for degree in set(
             self.DegreeList)]  # DegreeList is actually numpy.ndarray
         # split into two variables for plotting
@@ -250,17 +254,28 @@ class Network:
         plt.figure(0)
         axes = plt.axes()
         axes.set_xlim([0,50])
-        plt.plot(x, Poisson(x, lamb))
+        plt.bar(x[:49], y_weighted[:49])
+        plt.plot(x, Poisson(x, lamb), 'r')
 
         print("We have lambda = %.5lf" %lamb)
 
         plt.figure(1)
         axes = plt.axes()
         axes.set_xlim([0,50])
-        plt.plot(x, Powerlaw(x, a, b))
+        plt.bar(x[:49], y_weighted[:49])
+        plt.plot(x, Powerlaw(x, a, b), 'r')
 
         print("We have a = %.5lf and b = %.5lf" % (a, b))
+
+
+        poissonlist = [Poisson(i, lamb)[0] for i in x]
+        powerlist = [Powerlaw(i, a, b) for i in x]
+
+        chisq1 = chisquare(y_weighted, poissonlist)
+        chisq2 = chisquare(y_weighted, powerlist)
         
+        print(chisq1)
+        print(chisq2)
         
 
 
@@ -283,5 +298,49 @@ N1.plotDegDis('loglog')
 # %% v) avg degree of neighbours ===============================================================================================
 N1.AverageNeighbourDegree()
 
-# %% vii & viii) Fitting to Poisson and power law
+# %% vii & viii) Fitting to Poisson and power law ====================================================================
 N1.Fitting()
+
+# %% Trial for astro physics paper network ========================================================================
+
+n2 = NetworkBuilder("Astro")
+N2 = n2.buildFromData()
+
+# %%
+with open("Astro.txt") as data:
+            for i in range(4):
+                a = data.readline()	  # skip meta info
+                print(a)
+            adjacency_list = data.readlines()
+
+length = len(adjacency_list)
+
+rowind = []
+colind = []
+for i in range(length):
+    line = adjacency_list[i].split()
+    rowind.append(int(line[0]))
+    colind.append(int(line[1]))
+
+rowind2 = sorted(set(rowind))
+length2 = len(rowind2)
+
+copyrowind = rowind
+
+nlist = np.array(range(length2))
+rowind2 = np.array(rowind2)
+
+t0 = time.time()
+
+for b in range(length2):
+    print("Now at ", b, "of ", length2, "\n")
+    for n, i in enumerate(rowind):
+        if i == rowind2[b]:
+            rowind[n] = b
+t1 = time.time()
+
+print("Total node renumbering time: ", t1-t0, "s.")
+
+    
+
+# %%
