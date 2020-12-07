@@ -13,13 +13,21 @@ from math import factorial
 from math import exp
 #from collections import Counter
 
+
+
+
+# To see whether everything would work on a different network, I tried this one: https://snap.stanford.edu/data/ca-AstroPh.html
+# I think there's a problem with the renumbering. When trying to find the mean C for the astro graph, there are about 10 nodes which say they have 1 closed triangle, with only 1 neighbour. This is impossible.
+# Ignoring these +- 10 nodes, we do find the average clustering coefficient we're supposed to find, so we can probably assume that these 10 are the only ones that are annoying us.
+# The fitting to the Poisson distribution is very probably incorrect. I have not found the correct way of doing this yet.
+# Looking at the log log distribution of the Astro graph, it does seem that this is a network with scale.
+
 #################### TO DO ##########################################
 
 # scale free or non scale free? then choose another from https://snap.stanford.edu/data/index.html
-# see log graph
-# -> okay now what?
-
-# bonus: estimation of fit to poisson (random graph) and power law (scale free graph)
+# Improve fitting to the Poisson distribution
+# Find out what is going wrong in the renumbering of the astro network
+# Do a good reduced chisquared test. I think my version of the test is not working correctly
 
 ######################################################################
 
@@ -31,10 +39,30 @@ from math import exp
 
 # ii) adjacency matric A ===============================================================================================
 
+def renumber(old_list):
+    """
+    This function removes all duplicates from a list and then sorts from lowest to highest number.
+    Subsequently, the numbers in old_list are replaced with numbers from 0 to n, depending on where they are in the 
+    ranking from lowest to highest number.
+    """
+    new_list = old_list
+    no_duplicates = sorted(set(old_list))
+    length = len(no_duplicates)
+    no_duplicates = np.array(no_duplicates)
+
+    for a in range(length):
+        print("Now replacing the number of node %d of %d.\n" %(a, length))
+        for n, i in enumerate(new_list):
+            if i == no_duplicates[a]:
+                new_list[n] = a
+                
+    return new_list
+
 # creational pattern: builder pattern
 class NetworkBuilder:
-    def __init__(self, data_file):
+    def __init__(self, data_file, mode = ""):
         self._data_file = data_file
+        self.mode = mode
 
     def buildFromData(self):
 
@@ -55,6 +83,12 @@ class NetworkBuilder:
             line = adjacency_list[i].split()
             rowind.append(int(line[0]))
             colind.append(int(line[1]))
+
+        if self.mode == "renumber":
+            new_rowind = renumber(rowind)
+            rowind = new_rowind
+            new_colind = renumber(colind)
+            colind = new_colind
 
         self._A_size = max(rowind)+1
         self._A = np.zeros((self._A_size, self._A_size), dtype='uint8')
@@ -148,7 +182,10 @@ class Network:
 
         for i in range(self.A_size):
             #print("diagonal has value ", diagonal[i], "while degreelist has value ", self.DegreeList[i])
-            if diagonal[i] == 0:
+            if self.DegreeList[i] == 1 & diagonal[i] != 0:
+                print("diagonal has value ", diagonal[i], "while degreelist has value ", self.DegreeList[i], "at position", i, ".")
+                continue
+            if diagonal[i] == 0:         
                 continue
             C = C + diagonal[i]/(self.DegreeList[i]*(self.DegreeList[i] - 1))
 
@@ -301,46 +338,25 @@ N1.AverageNeighbourDegree()
 # %% vii & viii) Fitting to Poisson and power law ====================================================================
 N1.Fitting()
 
-# %% Trial for astro physics paper network ========================================================================
+# %% Run once ========================================================================
 
-n2 = NetworkBuilder("Astro")
+n2 = NetworkBuilder("Astro", "renumber")
 N2 = n2.buildFromData()
 
-# %%
-with open("Astro.txt") as data:
-            for i in range(4):
-                a = data.readline()	  # skip meta info
-                print(a)
-            adjacency_list = data.readlines()
+# %% run afterwards by importing ========================================================================
 
-length = len(adjacency_list)
+n2 = NetworkBuilder("Astro", "renumber")
+N2 = n2.buildByImport()
+# %% iii) clustering coefficient =====================================================================
+N2.GetMeanC()
 
-rowind = []
-colind = []
-for i in range(length):
-    line = adjacency_list[i].split()
-    rowind.append(int(line[0]))
-    colind.append(int(line[1]))
+# %% iv) probability mass function ============================================================================
+N2.plotDegDis('linear')
+N2.plotDegDis('loglog')
 
-rowind2 = sorted(set(rowind))
-length2 = len(rowind2)
-
-copyrowind = rowind
-
-nlist = np.array(range(length2))
-rowind2 = np.array(rowind2)
-
-t0 = time.time()
-
-for b in range(length2):
-    print("Now at ", b, "of ", length2, "\n")
-    for n, i in enumerate(rowind):
-        if i == rowind2[b]:
-            rowind[n] = b
-t1 = time.time()
-
-print("Total node renumbering time: ", t1-t0, "s.")
-
-    
+# %% v) avg degree of neighbours ===========================================================================
+N2.AverageNeighbourDegree()
+# %% vii & viii) Fitting to Poisson and power law =======================================================
+N2.Fitting()
 
 # %%
