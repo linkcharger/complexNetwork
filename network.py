@@ -8,6 +8,7 @@ import pandas as pd
 from scipy import sparse
 from scipy.optimize import curve_fit
 from scipy.stats import poisson
+from scipy.special import gammaln
 from scipy.stats import chisquare
 from math import factorial
 from math import exp
@@ -133,6 +134,13 @@ class NetworkBuilder:
         self._DegreeList = np.add.reduce(self._A)
         print("\n-- degree list created: \n" + str(self._DegreeList))
 
+        for i in range(self._A_size):
+            if(self._A[i,i] == 1):
+                self._A[i,i] = 0
+                self._DegreeList[i] = self._DegreeList[i] - 1
+        
+        self._A_sparse = sparse.coo_matrix(self._A)
+
         #
         #
 
@@ -169,27 +177,31 @@ class Network:
         """
 
         diagonal = []
+        C = 0
+
         A2_sparse = self.A_sparse @ self.A_sparse
         A3_sparse = A2_sparse @ self.A_sparse
+
+
         print("Matrix multiplication done.")
+
         A3_dense = A3_sparse.toarray()
 
         for i in range(self.A_size):
             diagonal.append(A3_dense[i, i])
 
         print("Filled the diagonal list.")
-        C = 0
 
         for i in range(self.A_size):
             #print("diagonal has value ", diagonal[i], "while degreelist has value ", self.DegreeList[i])
             if self.DegreeList[i] == 1 & diagonal[i] != 0:
-                print("diagonal has value ", diagonal[i], "while degreelist has value ", self.DegreeList[i], "at position", i, ".")
                 continue
+
             if diagonal[i] == 0:         
                 continue
             C = C + diagonal[i]/(self.DegreeList[i]*(self.DegreeList[i] - 1))
 
-        C_mean = C/self.A_size
+        C_mean = C/(self.A_size)
 
         print("Mean clustering was found to be %lf" % (C_mean))
 
@@ -230,27 +242,15 @@ class Network:
     # v) average neighbour degree ===============================================================================================
 
     def AverageNeighbourDegree(self):
-        randNode = np.random.randint(0, self.A_size)
-
-        neighbours = np.where(self.A[randNode, :] == 1)[
-            0]                    # returns tuple
-
-        Mean_Degree = 0
 
         for i in range(self.A_size):
             neighbours = np.where(self.A[i, :] == 1)[0]
-
-            Mean_Degree = Mean_Degree + \
-                round(np.add.reduce([self.DegreeList[j]
-                                     for j in neighbours])/len(neighbours), 2)
+            N = 0
+            if (len(neighbours) == 0):
+                continue
+        
+            Mean_Degree = Mean_Degree + np.add.reduce([self.DegreeList[j] for j in neighbours])/len(neighbours)
         Mean_Degree = Mean_Degree/self.A_size
-
-        # what about a list comprehension?
-        # dont think its possible without using different data format, eg pandas Series or DataFrame
-
-        #print("Node %d has %d neighbours (double-check: %d), which are located at %s." % (randNode, len(neighbours), self.DegreeList[randNode], neighbours))
-
-        #print("\nThose neighbours themself have on average %s neighbours." % round(np.add.reduce([self.DegreeList[i] for i in neighbours])/len(neighbours), 2))
 
         print("\nThe average amount of neighbour's neighbours is %s." %
               round((Mean_Degree), 3))
@@ -267,24 +267,32 @@ class Network:
         dd = [[degree, self.DegreeList.tolist().count(degree)] for degree in set(
             self.DegreeList)]  # DegreeList is actually numpy.ndarray
         # split into two variables for plotting
-        x = [dd[i][0] for i in range(len(dd))]
-        y = [dd[i][1] for i in range(len(dd))]
+        x = np.array([dd[i][0] for i in range(len(dd))])
+        y = np.array([dd[i][1] for i in range(len(dd))])
         weight = np.add.reduce(y)
         y_weighted = [float(i/weight) for i in y]
 
+        def taj(x):
+            return 1./x, 1./x**2.
+
         def Poisson(k, lamb):
-            return poisson.pmf(k, lamb)
+            y, J = taj(k)
+            return np.exp(y * np.log(lamb) - lamb - gammaln(y + 1.)) * J
+
+
+        """ def Poisson(k, lamb):
+            return poisson.pmf(k, lamb) """
 
 
         def Powerlaw(x, a, b):
             return a*x**b
 
 
-        params_poisson, c_poisson = curve_fit(Poisson, x, y_weighted)
+        params_poisson, _ = curve_fit(Poisson, x, y_weighted)
 
         lamb = params_poisson
 
-        params_power, c_power = curve_fit(Powerlaw, x, y_weighted)
+        params_power, _ = curve_fit(Powerlaw, x, y_weighted)
 
         a, b = params_power
         
@@ -347,6 +355,7 @@ N2 = n2.buildFromData()
 
 n2 = NetworkBuilder("Astro", "renumber")
 N2 = n2.buildByImport()
+
 # %% iii) clustering coefficient =====================================================================
 N2.GetMeanC()
 
@@ -358,5 +367,3 @@ N2.plotDegDis('loglog')
 N2.AverageNeighbourDegree()
 # %% vii & viii) Fitting to Poisson and power law =======================================================
 N2.Fitting()
-
-# %%
