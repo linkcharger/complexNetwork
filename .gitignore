@@ -1,2 +1,6 @@
 distribution.py
 *.npz
+resources
+*.json
+.DS_Store
+.vscode
