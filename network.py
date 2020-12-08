@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 from scipy.optimize import curve_fit
-<<<<<<< HEAD
 from scipy.stats import poisson
 from scipy.special import gammaln
 from scipy.stats import chisquare
@@ -18,9 +17,6 @@ from math import exp
 
 
 
-=======
-from scipy.stats import chisquare, poisson
->>>>>>> 2e9fe6a1275cee1abeeb99b1598942b7e706dc4a
 
 # To see whether everything would work on a different network, I tried this one: https://snap.stanford.edu/data/ca-AstroPh.html
 # I think there's a problem with the renumbering. When trying to find the mean C for the astro graph, there are about 10 nodes which say they have 1 closed triangle, with only 1 neighbour. This is impossible.
@@ -223,14 +219,11 @@ class Network:
 # v) average neighbour degree ===============================================================================================
 
     def AverageNeighbourDegree(self):
-<<<<<<< HEAD
-=======
         randNode = np.random.randint(0, self.A_size)
 
         neighbours = np.where(self.A[randNode, :] == 1)[0]                    # returns tuple
 
         Mean_Degree = 0
->>>>>>> 2e9fe6a1275cee1abeeb99b1598942b7e706dc4a
 
         for i in range(self.A_size):
             neighbours = np.where(self.A[i, :] == 1)[0]
@@ -377,14 +370,9 @@ N2.showA()
 # %% run afterwards by importing 
 n2 = NetworkBuilder("Astrophysics citations")
 N2 = n2.buildByImport()
-<<<<<<< HEAD
-
-# %% iii) clustering coefficient =====================================================================
-=======
 N2.showA()
 
 # %% iii) clustering coefficient 
->>>>>>> 2e9fe6a1275cee1abeeb99b1598942b7e706dc4a
 N2.GetMeanC()
 
 # %% iv) probability mass function 
@@ -395,19 +383,3 @@ N2.plotDegDis('loglog')
 N2.AverageNeighbourDegree()
 # %% vii & viii) Fitting to Poisson and power law 
 N2.Fitting()
-<<<<<<< HEAD
-=======
-
-# %% just graphics
-n1 = NetworkBuilder("Enron emails")
-N1 = n1.buildByImport()
-N1.showA()
-N1.plotDegDis('linear')
-N1.plotDegDis('loglog')
-
-n2 = NetworkBuilder("Astrophysics citations")
-N2 = n2.buildByImport()
-N2.showA()
-N2.plotDegDis('linear')
-N2.plotDegDis('loglog')
->>>>>>> 2e9fe6a1275cee1abeeb99b1598942b7e706dc4a
