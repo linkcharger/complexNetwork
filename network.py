@@ -206,33 +206,28 @@ class Network:
 # v) average neighbour degree ===============================================================================================
 
     def AverageNeighbourDegree(self):
-        randNode = np.random.randint(0, self.A_size)
+        # randNode = np.random.randint(0, self.A_size)
+        # neighbours = np.where(self.A[randNode, :] == 1)[0]                    # returns tuple
+        # print("Node %d has %d neighbours (double-check: %d), which are located at %s." % (randNode, len(neighbours), self.DegreeList[randNode], neighbours))
+        # print("\nThose neighbours themself have on average %s neighbours." % round(np.add.reduce([self.DegreeList[i] for i in neighbours])/len(neighbours), 2))
 
-        neighbours = np.where(self.A[randNode, :] == 1)[0]                    # returns tuple
 
         Mean_Degree = 0
-
         for i in range(self.A_size):
             neighbours = np.where(self.A[i, :] == 1)[0]
 
-            Mean_Degree = Mean_Degree + \
-                round(np.add.reduce([self.DegreeList[j]
-                                     for j in neighbours])/len(neighbours), 2)
+            Mean_Degree = Mean_Degree + round(np.add.reduce([self.DegreeList[j] for j in neighbours])/len(neighbours), 2)
         Mean_Degree = Mean_Degree/self.A_size
 
-        # what about a list comprehension?
-        # dont think its possible without using different data format, eg pandas Series or DataFrame
-
-        #print("Node %d has %d neighbours (double-check: %d), which are located at %s." % (randNode, len(neighbours), self.DegreeList[randNode], neighbours))
-
-        #print("\nThose neighbours themself have on average %s neighbours." % round(np.add.reduce([self.DegreeList[i] for i in neighbours])/len(neighbours), 2))
-
+       
         print("\nThe average amount of neighbour's neighbours is %s." %
               round((Mean_Degree), 3))
 
         print("\nThe average number of degrees in the entire network is %s." %
               round(np.add.reduce(self.DegreeList)/len(self.DegreeList), 3))
 
+
+		
 # vii & viii) Fitting to Poisson and power law ===============================================================================
 
     def Fitting(self):
