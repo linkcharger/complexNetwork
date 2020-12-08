@@ -128,11 +128,16 @@ class Network:
         self.A_size = A_size
         self.DegreeList = DegreeList
 
+
+
     def showA(self):
         plt.figure(figsize = (8,8))
         plt.title(self.name + " - adjacency matrix")
         plt.spy(self.A_sparse, markersize = .5)
-        plt.savefig(self.name + ' - plot_' +  'A.png', dpi=200)
+        plt.savefig(self.name + ' - plot_' +  'A.png', dpi=200, bbox_inches = 'tight')
+        plt.close()
+
+
 
 # iii) average clustering coefficient ===============================================================================================
 
@@ -183,8 +188,9 @@ class Network:
             plt.title(self.name + ' - Degree distribution, linear scale')
             plt.xlabel('degrees (<=50)')
             plt.ylabel('number of nodes')
-            plt.savefig(self.name + ' - plot_DD_lin.png', dpi=200, transparent=True)
-            plt.show()
+            plt.savefig(self.name + ' - plot_DD_lin.pdf', dpi=200, bbox_inches = 'tight')
+            # plt.show()
+            plt.close()
 
         elif style == 'loglog':
             plt.figure(figsize = (10,6)) 
@@ -193,8 +199,9 @@ class Network:
             plt.grid()                                          # show grid
             plt.xlabel('log(degrees)')
             plt.ylabel('log(number of nodes)')
-            plt.savefig(self.name + ' - plot_DD_loglog.png', dpi=200, transparent=True)
-            plt.show()
+            plt.savefig(self.name + ' - plot_DD_loglog.pdf', dpi=200, bbox_inches = 'tight')
+            # plt.show()
+            plt.close()
 
 # v) average neighbour degree ===============================================================================================
 
@@ -308,6 +315,20 @@ def renumber(old_list):
 ########################################################################################################################
 ########################################################################################################################
 
+# %% just graphics
+n1 = NetworkBuilder("Enron emails")
+N1 = n1.buildByImport()
+N1.showA()
+N1.plotDegDis('linear')
+N1.plotDegDis('loglog')
+
+n2 = NetworkBuilder("Astrophysics citations")
+N2 = n2.buildByImport()
+N2.showA()
+N2.plotDegDis('linear')
+N2.plotDegDis('loglog')
+
+
 
 # %% ENRON  ===============================================================================================
 n1 = NetworkBuilder("Enron emails")
@@ -362,15 +383,4 @@ N2.AverageNeighbourDegree()
 # %% vii & viii) Fitting to Poisson and power law 
 N2.Fitting()
 
-# %% just graphics
-n1 = NetworkBuilder("Enron emails")
-N1 = n1.buildByImport()
-N1.showA()
-N1.plotDegDis('linear')
-N1.plotDegDis('loglog')
 
-n2 = NetworkBuilder("Astrophysics citations")
-N2 = n2.buildByImport()
-N2.showA()
-N2.plotDegDis('linear')
-N2.plotDegDis('loglog')

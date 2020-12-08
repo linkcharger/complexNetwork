@@ -4,3 +4,4 @@ resources
 *.json
 .DS_Store
 .vscode
+local tex
