@@ -133,7 +133,7 @@ class Network:
     def showA(self):
         plt.figure(figsize = (8,8))
         plt.title(self.name + " - adjacency matrix")
-        plt.spy(self.A_sparse, markersize = .5)
+        plt.spy(self.A_sparse, markersize = .005)
         plt.savefig(self.name + ' - plot_' +  'A.png', dpi=200, bbox_inches = 'tight')
         plt.close()
 
