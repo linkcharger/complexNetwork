@@ -14,6 +14,7 @@ from scipy.stats import chisquare
 from math import factorial
 from math import exp
 #from collections import Counter
+import gc
 
 
 
@@ -369,11 +370,9 @@ N1.showA()
 
 
 # %% iii) clustering coefficient 
+gc.collect()
 N1.GetMeanC()
 
-# %% iv) probability mass function 
-N1.plotDegDis('linear')
-N1.plotDegDis('loglog')
 
 # %% v) avg degree of neighbours 
 N1.AverageNeighbourDegree()
@@ -397,11 +396,8 @@ N2 = n2.buildByImport()
 N2.showA()
 
 # %% iii) clustering coefficient 
+gc.collect()
 N2.GetMeanC()
-
-# %% iv) probability mass function 
-N2.plotDegDis('linear')
-N2.plotDegDis('loglog')
 
 # %% v) avg degree of neighbours 
 N2.AverageNeighbourDegree()
