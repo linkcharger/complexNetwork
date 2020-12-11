@@ -124,6 +124,8 @@ class NetworkBuilder:
                 self._A[i,i] = 0
                 self._DegreeList[i] = self._DegreeList[i] - 1
         
+        self._DegreeList = self._DegreeList[self._DegreeList != 0]
+        
         self._A_sparse = sparse.coo_matrix(self._A)
 
         #
@@ -150,10 +152,14 @@ class Network:
         plt.figure(figsize = (8,8))
         plt.title(self.name + " - adjacency matrix")
         plt.spy(self.A_sparse, markersize = .005)
+<<<<<<< HEAD
         plt.savefig(self.name + ' - plot_' +  'A.png', dpi=200, bbox_inches = 'tight')
         plt.close()
 
 
+=======
+        plt.savefig(self.name + ' - plot_' +  'A.png', dpi=200)
+>>>>>>> LoeksBranch
 
 # iii) average clustering coefficient ===============================================================================================
 
@@ -179,10 +185,6 @@ class Network:
 
         C = 0
         for i in range(self.A_size):
-            #print("diagonal has value ", diagonal[i], "while degreelist has value ", self.DegreeList[i])
-            if self.DegreeList[i] == 1 & diagonal[i] != 0:
-                continue
-
             if diagonal[i] == 0:         
                 continue
             C = C + diagonal[i]/(self.DegreeList[i]*(self.DegreeList[i] - 1))
@@ -263,53 +265,60 @@ class Network:
         y = np.array([dd[i][1] for i in range(len(dd))])
         weight = np.add.reduce(y)
         y_weighted = [float(i/weight) for i in y]
-
-        def taj(x):
-            return 1./x, 1./x**2.
+        PowerStart = 0
+        PoissonStart = 0
+            
 
         def Poisson(k, lamb):
-            y, J = taj(k)
-            return np.exp(y * np.log(lamb) - lamb - gammaln(y + 1.)) * J
-
-
-        """ def Poisson(k, lamb):
-            return poisson.pmf(k, lamb) """
+            return poisson.pmf(k-1, lamb)
 
 
         def Powerlaw(x, a, b):
             return a*x**b
 
 
-        params_poisson, _ = curve_fit(Poisson, x, y_weighted)
+        params_poisson, _ = curve_fit(Poisson, x[PoissonStart:], y_weighted[PoissonStart:], maxfev=1000)
 
         lamb = params_poisson
 
-        params_power, _ = curve_fit(Powerlaw, x, y_weighted)
+        params_power, _ = curve_fit(Powerlaw, x[PowerStart:], y_weighted[PowerStart:])
 
         a, b = params_power
         
-        plt.figure(0)
+        fig1 = plt.figure(0)
         axes = plt.axes()
         axes.set_xlim([0,50])
-        plt.bar(x[:49], y_weighted[:49])
-        plt.plot(x, Poisson(x, lamb), 'r')
+        axes.set_ylim([0,0.25])
+        axes.set_xlabel("Degree")
+        axes.set_ylabel("Occurence")
+        plt.bar(x[:49], y_weighted[:49], label = "data")
+        plt.plot(x, Poisson(x, lamb), 'r', label = "fit")
+        plt.legend()
+        plt.title("Astrophysics citations")
+        plt.savefig(self.name + ' - plot_Poisson_' + str(PoissonStart) +  '.png', dpi=200)
 
-        print("We have lambda = %.5lf" %lamb)
+        print("We have lambda = %.5lf" %(lamb))
 
         plt.figure(1)
         axes = plt.axes()
         axes.set_xlim([0,50])
-        plt.bar(x[:49], y_weighted[:49])
-        plt.plot(x, Powerlaw(x, a, b), 'r')
+        axes.set_ylim([0,0.6])
+        axes.set_xlabel("Degree")
+        axes.set_ylabel("Occurence")
+        plt.bar(x[:49], y_weighted[:49], label = "data")
+        plt.plot(x, Powerlaw(x, a, b), 'r', label = "fit")
+        plt.legend()
+        #plt.title("Astrophysics citations")
+        #plt.savefig(self.name + ' - plot_Powerlaw_' + str(PowerStart) +  '.png', dpi=200)
 
-        print("We have a = %.5lf and b = %.5lf" % (a, b))
+        print("We have a = %.5lf, b = %.5lf" % (a, b))
 
 
         poissonlist = [Poisson(i, lamb)[0] for i in x]
         powerlist = [Powerlaw(i, a, b) for i in x]
 
-        chisq1 = chisquare(y_weighted, poissonlist)
-        chisq2 = chisquare(y_weighted, powerlist)
+        chisq1 = chisquare(y_weighted[PoissonStart:], poissonlist[PoissonStart:], 1)
+        chisq2 = chisquare(y_weighted[PowerStart:], powerlist[PowerStart:], 1)
         
         print(chisq1)
         print(chisq2)
@@ -364,7 +373,7 @@ N1.showA()
 # %% run afterwards by importing 
 n1 = NetworkBuilder("Enron emails")
 N1 = n1.buildByImport()
-N1.showA()
+#N1.showA()
 
 
 
@@ -388,12 +397,12 @@ N1.Fitting()
 # %% astrophysics citations =============================================================================
 n2 = NetworkBuilder("Astrophysics citations", "renumber")
 N2 = n2.buildFromData()
-N2.showA()
+#N2.showA()
 
 # %% run afterwards by importing 
 n2 = NetworkBuilder("Astrophysics citations")
 N2 = n2.buildByImport()
-N2.showA()
+#N2.showA()
 
 # %% iii) clustering coefficient 
 gc.collect()
